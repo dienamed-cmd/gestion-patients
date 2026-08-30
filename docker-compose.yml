@@ -1,0 +1,18 @@
+# Je lance PostgreSQL avec Docker
+# Sans avoir à l'installer directement sur mon ordi
+
+services:
+  db:
+    image: postgres:15
+    container_name: gestion-patients-db
+    environment:
+      POSTGRES_USER: diena
+      POSTGRES_PASSWORD: diena123
+      POSTGRES_DB: gestion_patients
+    ports:
+      - "5433:5432"  # J'utilise 5433 pour ne pas conflicter avec les Globetrotteuses
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediSuivi — Gestion des Patients</title>
+
+  <!-- Je charge une belle police depuis Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Je relie mon fichier CSS pour le design -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ──────────────────────────────────────
+       La barre en haut avec mon nom et mon appli
+       ────────────────────────────────────── -->
+  <header class="topbar">
+
+    <!-- Le logo à gauche -->
+    <div class="topbar-logo">
+      <div class="logo-point"></div>
+      MediSuivi
+    </div>
+
+    <!-- Mon nom et mon rôle à droite -->
+    <div class="topbar-user">
+      <div>
+        <div class="user-nom">D. Camara</div>
+        <div class="user-role">Aide-soignante</div>
+      </div>
+      <!-- Mon avatar avec mes initiales -->
+      <div class="avatar-top">DC</div>
+    </div>
+
+  </header>
+
+  <main class="page">
+
+    <!-- Le titre de la page et le bouton pour ajouter un patient -->
+    <div class="page-entete">
+      <div>
+        <div class="page-eyebrow">Service de soins</div>
+        <h1 class="page-titre">Patients en charge</h1>
+        <p class="page-date" id="dateAffichee"></p>
+      </div>
+      <button class="btn-principal" onclick="toggleFormulaire()">
+        + Nouveau patient
+      </button>
+    </div>
+
+    <!-- Mes 4 blocs de comptage -->
+    <div class="triage-bar">
+      <div class="triage-segment actif" onclick="setFiltre('tous', this)">
+        <div class="bracelet tous"></div>
+        <div>
+          <div class="triage-num" id="nbTous">0</div>
+          <div class="triage-label">Tous</div>
+        </div>
+      </div>
+      <div class="triage-segment" onclick="setFiltre('urgent', this)">
+        <div class="bracelet urgent"></div>
+        <div>
+          <div class="triage-num" id="nbUrgent">0</div>
+          <div class="triage-label">Urgents</div>
+        </div>
+      </div>
+      <div class="triage-segment" onclick="setFiltre('surveiller', this)">
+        <div class="bracelet surveiller"></div>
+        <div>
+          <div class="triage-num" id="nbSurveiller">0</div>
+          <div class="triage-label">À surveiller</div>
+        </div>
+      </div>
+      <div class="triage-segment" onclick="setFiltre('stable', this)">
+        <div class="bracelet stable"></div>
+        <div>
+          <div class="triage-num" id="nbStable">0</div>
+          <div class="triage-label">Stables</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- La barre de recherche et le tri -->
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="search-icone">🔍</span>
+        <input
+          class="search-input"
+          type="text"
+          id="recherche"
+          placeholder="Rechercher un patient ou une chambre…"
+          oninput="afficher()"
+        />
+      </div>
+      <select class="tri-select" id="triSelect" onchange="afficher()">
+        <option value="priorite">Trier par priorité</option>
+        <option value="nom">Trier par nom</option>
+        <option value="heure">Trier par heure</option>
+      </select>
+    </div>
+
+    <!-- Ma liste de patients -->
+    <ul class="patients-liste" id="liste"></ul>
+
+    <!-- Ce message s'affiche quand il n'y a aucun patient -->
+    <div class="liste-vide" id="vide" style="display:none">
+      <div class="vide-icone">🛏️</div>
+      <div class="vide-titre">Aucun patient enregistré</div>
+      <div class="vide-sous">Cliquez sur « Nouveau patient » pour commencer.</div>
+    </div>
+
+    <!-- Mon formulaire pour ajouter un patient -->
+    <div class="formulaire-panneau" id="formulairePanneau">
+      <div class="formulaire-titre">➕ Ajouter un patient</div>
+      <div class="formulaire-grille">
+        <div class="champ">
+          <label for="inputNom">Nom complet</label>
+          <input type="text" id="inputNom" placeholder="Ex : Martin Sophie"
+            onkeydown="if(event.key==='Enter') ajouter()" />
+        </div>
+        <div class="champ">
+          <label for="inputChambre">Chambre</label>
+          <input type="text" id="inputChambre" placeholder="Ex : 14B" />
+        </div>
+        <div class="champ">
+          <label for="statut">Priorité</label>
+          <select id="statut">
+            <option value="stable">✅ Stable</option>
+            <option value="surveiller">⚠️ À surveiller</option>
+            <option value="urgent">🔴 Urgent</option>
+          </select>
+        </div>
+        <button class="btn-principal" onclick="ajouter()">Ajouter</button>
+      </div>
+      <p id="erreur" style="display:none"></p>
+    </div>
+
+  </main>
+
+  <!-- La fenêtre popup pour les notes -->
+  <div class="modal-fond" id="modalFond">
+    <div class="modal">
+      <div class="modal-entete">
+        <div>
+          <div class="modal-titre" id="modalTitre">Notes cliniques</div>
+          <div class="modal-sous"  id="modalSous"></div>
+        </div>
+        <button class="btn-fermer" onclick="fermerModal()">✕</button>
+      </div>
+      <textarea id="modalNotes" placeholder="Observations, traitements, consignes de soins…"></textarea>
+      <div class="modal-pied">
+        <button class="btn-annuler" onclick="fermerModal()">Annuler</button>
+        <button class="btn-sauver"  onclick="sauverNotes()">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Le petit message de confirmation -->
+  <div class="toast" id="toast">
+    <span class="toast-point"></span>
+    <span id="toastMessage"></span>
+  </div>
+
+  <script src="script.js"></script>
+
+</body>
+</html>
