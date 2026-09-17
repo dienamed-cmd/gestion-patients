@@ -15,6 +15,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Je configure les sessions
+const session = require("express-session");
+
+app.use(session({
+  secret: "medisuivi-secret-key",
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 24 * 60 * 60 * 1000 } // 24 heures
+}));
+
 
 // ──────────────────────────────────────
 // ROUTE 1 — Récupérer tous les patients
@@ -166,6 +176,68 @@ app.get("/constantes/:patient_id", async (req, res) => {
   }
 });
 
+// ──────────────────────────────────────
+// ROUTE LOGIN — Je vérifie le mot de passe
+// POST /login
+// ──────────────────────────────────────
+app.post("/login", async (req, res) => {
+  try {
+    let { nom, mot_de_passe } = req.body;
+
+    // Je cherche le soignant dans la base de données
+    let resultat = await pool.query(
+      "SELECT * FROM soignant WHERE nom = $1",
+      [nom]
+    );
+
+    // Si le soignant n'existe pas
+    if (resultat.rows.length === 0) {
+      return res.status(401).json({ erreur: "Identifiants incorrects" });
+    }
+
+    let soignant = resultat.rows[0];
+
+    // Je compare le mot de passe avec le hash
+    const bcrypt = require("bcrypt");
+    let motDePasseCorrect = await bcrypt.compare(mot_de_passe, soignant.mot_de_passe);
+
+    if (!motDePasseCorrect) {
+      return res.status(401).json({ erreur: "Identifiants incorrects" });
+    }
+
+    // Je sauvegarde la session
+    req.session.soignantId  = soignant.id;
+    req.session.soignantNom = soignant.nom;
+
+    res.json({ message: "Connecté !", nom: soignant.nom });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ erreur: "Erreur serveur" });
+  }
+});
+
+
+// ──────────────────────────────────────
+// ROUTE LOGOUT — Je déconnecte le soignant
+// POST /logout
+// ──────────────────────────────────────
+app.post("/logout", (req, res) => {
+  req.session.destroy();
+  res.json({ message: "Déconnecté !" });
+});
+
+
+// ──────────────────────────────────────
+// MIDDLEWARE — Je vérifie si le soignant est connecté
+// Utilisé pour protéger les routes sensibles
+// ──────────────────────────────────────
+const verifierConnexion = (req, res, next) => {
+  if (!req.session.soignantId) {
+    return res.status(401).json({ erreur: "Non autorisé — veuillez vous connecter" });
+  }
+  next();
+};
 // ──────────────────────────────────────
 // Je lance mon serveur
 // ──────────────────────────────────────

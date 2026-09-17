@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MediSuivi — Connexion</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0B2545;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .carte {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-titre {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #0B2545;
+    }
+
+    .logo-point {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: #00A878;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .logo-sous {
+      font-size: 0.85rem;
+      color: #9B9B8E;
+      margin-top: 4px;
+    }
+
+    .champ {
+      margin-bottom: 16px;
+    }
+
+    .champ label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .champ input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #E2E2DC;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+    }
+
+    .champ input:focus {
+      outline: none;
+      border-color: #00A878;
+    }
+
+    .btn-connexion {
+      width: 100%;
+      padding: 12px;
+      background: #0B2545;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      margin-top: 8px;
+      transition: background 0.15s;
+    }
+
+    .btn-connexion:hover { background: #163a6e; }
+
+    #erreur {
+      color: #E63946;
+      font-size: 0.82rem;
+      margin-top: 12px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="carte">
+    <div class="logo">
+      <div class="logo-titre">
+        <span class="logo-point"></span>MediSuivi
+      </div>
+      <div class="logo-sous">Service de soins — Connexion</div>
+    </div>
+
+    <div class="champ">
+      <label for="inputNom">Nom</label>
+      <input type="text" id="inputNom" placeholder="Ex : D. Camara" />
+    </div>
+
+    <div class="champ">
+      <label for="inputMotDePasse">Mot de passe</label>
+      <input type="password" id="inputMotDePasse" placeholder="••••••••" />
+    </div>
+
+    <button class="btn-connexion" onclick="seConnecter()">Se connecter</button>
+    <p id="erreur">Identifiants incorrects. Réessayez.</p>
+  </div>
+
+  <script>
+    async function seConnecter() {
+      let nom         = document.getElementById("inputNom").value.trim();
+      let mot_de_passe = document.getElementById("inputMotDePasse").value;
+
+      if (nom === "" || mot_de_passe === "") {
+        document.getElementById("erreur").textContent = "Remplis tous les champs.";
+        document.getElementById("erreur").style.display = "block";
+        return;
+      }
+
+      try {
+        let reponse = await fetch("http://localhost:3000/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nom, mot_de_passe })
+        });
+
+        let data = await reponse.json();
+
+        if (reponse.ok) {
+          // Connexion réussie → je redirige vers l'app
+          window.location.href = "http://127.0.0.1:5500/index.html";
+        } else {
+          document.getElementById("erreur").textContent = data.erreur;
+          document.getElementById("erreur").style.display = "block";
+        }
+
+      } catch (err) {
+        document.getElementById("erreur").textContent = "Impossible de contacter le serveur.";
+        document.getElementById("erreur").style.display = "block";
+      }
+    }
+
+    // Connexion avec la touche Entrée
+    document.getElementById("inputMotDePasse").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") seConnecter();
+    });
+  </script>
+
+</body>
+</html>
